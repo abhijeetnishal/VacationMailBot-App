@@ -11,5 +11,5 @@ const emailServices = require('./mailController');
 app.get('/', emailServices);
 
 app.listen(port, ()=>{
-    console.log(`app listening at port: ${port}`);
+    console.log(`Server listening at port: ${port}`);
 })

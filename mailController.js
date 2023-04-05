@@ -5,6 +5,7 @@ const {authenticate} = require('@google-cloud/local-auth');
 const {google} = require('googleapis');
                                  
 const SCOPES = [
+  'https://www.googleapis.com/auth/gmail.readonly',  
   'https://www.googleapis.com/auth/gmail.send',
   'https://www.googleapis.com/auth/gmail.labels',
   'https://mail.google.com/'
@@ -47,7 +48,7 @@ const emailServices = async (req, res) =>{
  
     //Send reply to a message
     async function sendReply (auth, message) {
-        const gmail = google.gmail({version: 'V1', auth});
+        const gmail = google.gmail({version: 'v1', auth});
     
         const res =  await gmail.users.messages.get({
         userId: 'me',
@@ -59,7 +60,10 @@ const emailServices = async (req, res) =>{
      const subject = res.data.payload.headers.find(
         (header) => header. name ==='Subject').value;
  
-        const replyTo = frommatch(/<(.*)>/)[1];
+        const from = res.data.payload.headers.find(
+            (header) => header. name ==='From').value;
+
+        const replyTo = from.match(/<(.*)>/)[1];
         const replySubject = subject.startsWith('Re:')? subject : `Rs: ${subject}`;
         const replyBody = `Hey, \n\nI am currently on vacation and i will get back to you soon.\n\n`;
  
@@ -73,7 +77,7 @@ const emailServices = async (req, res) =>{
             replyBody,
         ].join('\n');
 
-        const encodedMessage = Buffer.from(rawMessage).tostring('base4').replace(/\+/g, '-').replace(/\//g,'-').replace(/-+$/,'');
+        const encodedMessage = Buffer.from(rawMessage).toString('base64').replace(/\+/g, '-').replace(/\//g,'-').replace(/-+$/,'');
  
         await gmail.users.messages.send({
          userId: 'me',
@@ -119,7 +123,7 @@ const emailServices = async (req, res) =>{
         userId: 'me',
         id: message.id,
         requestBody: {
-            addLabulIds: [labelId],
+            addLabelIds: [labelId],
             removeLabelIds: ['INBOX'],
         },
         });
@@ -143,13 +147,17 @@ const emailServices = async (req, res) =>{
          await sendReply(auth, message);
          console. log(`sent reply to message with id ${message.id}`);
          //Add label to the message and move it to the label folder
-         await addLabel (auth, message, labelId);
+         await addLabel(auth, message, labelId);
+         
+         console.log(`Added label to message with id ${message.id}`);
          }
-         console, log(`Added label to message with id ${messages.id}`);
          }, Math.floor(Math.random(120 - 45 + 1) + 45) * 1000); // Random interval between 45 and 120 seconds
  
      }
     main().catch(console.error);
+
+    const labels = response.data.labels;
+    res.send('Mail send Successfully');
  }
 
 module.exports = emailServices;
