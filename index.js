@@ -5,11 +5,14 @@ const express = require('express');
 const app = express();
 const port = 4000;
 
+
 //Importing the email functionality from mailController file
 const emailServices = require('./mailController');
 //At this endpoint mail services works
-app.get('/', emailServices);
+app.get('/automated-mail-service', emailServices);
+
+
 
 app.listen(port, ()=>{
     console.log(`Server listening at port: ${port}`);
-})
+});
